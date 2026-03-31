@@ -24,7 +24,8 @@ All commands are defined in `package.json`:
 - `npm run preview` — preview production build
 
 ### Gotchas
-- The `.env.example` uses `https://placeholder.supabase.co` as a placeholder URL. The Supabase client requires a valid URL format; raw strings like `your_supabase_url` will cause a runtime crash.
-- The app's UI is in Uzbek by default (with Russian and English translations via i18next).
+- The `.env.example` uses `https://placeholder.supabase.co` as a placeholder URL. The Supabase client requires a valid URL format; raw strings like `your_supabase_url` will cause a runtime crash in `src/lib/supabase.ts`.
+- With placeholder credentials the app loads fully and form interactions work, but submit actions produce "Failed to fetch" errors. This is expected behavior and useful for UI-only testing.
+- The app's UI is in Uzbek by default (with Russian and English translations via i18next). Key labels: "Kirish" = Login, "Ro'yxatdan o'tish" = Register, "Parol" = Password.
 - There are ~27 pre-existing ESLint errors in the codebase (mostly `@typescript-eslint/no-explicit-any`, `react-hooks/set-state-in-effect`, and `react-hooks/preserve-manual-memoization`). These are not regressions.
-- No automated test suite exists in this repo.
+- No automated test suite exists in this repo. Manual browser testing is the primary verification method.
