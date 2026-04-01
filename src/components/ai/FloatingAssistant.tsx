@@ -1,24 +1,8 @@
-import { useState, useRef, useEffect, useCallback, type ReactNode, type KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Brain, X, Send, User, Sparkles, BookOpen, ClipboardCheck, MessageCircle, GraduationCap } from 'lucide-react'
 import { cn } from '../../lib/utils'
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface FloatingAssistantProps {
-  children?: ReactNode
-  /** Remaining AI credits to show on badge */
-  credits?: number
-}
-
-interface ChatMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-}
+import { useAIChat } from '../../hooks/useAIChat'
 
 // ---------------------------------------------------------------------------
 // Quick-action chips
@@ -32,82 +16,7 @@ const QUICK_ACTIONS = [
 ] as const
 
 // ---------------------------------------------------------------------------
-// Mock response helpers (same data source as AIChatPanel for consistency)
-// ---------------------------------------------------------------------------
-
-const MOCK_RESPONSES: Record<string, string> = {
-  default: `Assalomu alaykum! Men Murabbiy AI - sizning shaxsiy yordamchingizman.
-
-Quyidagi mavzularda yordam bera olaman:
-- **Dars rejalarini tuzish** va tahlil qilish
-- **Baholash mezonlarini** yaratish
-- **Metodologik maslahatlar** berish
-- **O'qitish sifatini** oshirish bo'yicha takliflar
-
-Qanday yordam kerak?`,
-
-  'Dars reja': `## Dars reja tuzish
-
-Qaysi fan va sinf uchun dars reja kerak? Men sizga to'liq reja tayyorlab beraman:
-
-- **Maqsad va vazifalar** (Bloom taksonomiyasi asosida)
-- **Dars borishi** (5E modeli bo'yicha)
-- **Baholash mezonlari**
-- **Uyga vazifa**
-
-Iltimos, fan nomi, sinf va mavzuni yozing.`,
-
-  'Baholash': `## Baholash usullari
-
-Quyidagi baholash turlarida yordam bera olaman:
-
-1. **Diagnostik baholash** - dars boshida bilim darajasini aniqlash
-2. **Formativ baholash** - dars jarayonida o'zlashtirishni kuzatish
-3. **Summativ baholash** - yakuniy bilimlarni tekshirish
-4. **Rubrika tuzish** - aniq mezonlar asosida baholash
-
-Qaysi tur bo'yicha yordam kerak?`,
-
-  'Maslahat': `## Pedagogik maslahat
-
-Quyidagi yo'nalishlarda maslahat bera olaman:
-
-- **Sinf boshqaruvi** - intizom va motivatsiya
-- **Differensial o'qitish** - har xil darajadagi o'quvchilar bilan ishlash
-- **Ota-onalar bilan munosabat** - samarali hamkorlik
-- **Kasbiy rivojlanish** - malaka oshirish yo'llari
-
-Qaysi masala bo'yicha maslahat olmoqchisiz?`,
-
-  'Metodika': `## Zamonaviy o'qitish metodikalari
-
-Eng samarali metodikalar:
-
-### Interfaol usullar
-- **Think-Pair-Share** - fikrla, muhokama qil, bo'lish
-- **Jigsaw** - ekspert guruhlari usuli
-- **Aqliy hujum** - erkin fikr almashinuvi
-
-### Texnologik yondashuvlar
-- **Flipped Classroom** - teskari sinf xona
-- **Gamification** - o'yin elementlari
-- **STEAM** - fanlararo integratsiya
-
-Qaysi metodika haqida batafsil bilmoqchisiz?`,
-}
-
-function getMockResponse(message: string): string {
-  const lower = message.trim().toLowerCase()
-  for (const [key, response] of Object.entries(MOCK_RESPONSES)) {
-    if (key !== 'default' && lower.includes(key.toLowerCase())) {
-      return response
-    }
-  }
-  return MOCK_RESPONSES.default
-}
-
-// ---------------------------------------------------------------------------
-// Simple markdown-ish formatter (lightweight, no deps)
+// Simple markdown-ish formatter
 // ---------------------------------------------------------------------------
 
 function formatContent(content: string): string {
@@ -166,13 +75,18 @@ function TypingIndicator() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function FloatingAssistant({ children, credits = 50 }: FloatingAssistantProps) {
+export default function FloatingAssistant() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Real AI chat hook
+  const { messages, sendMessage: sendAIMessage, loading, error, credits } = useAIChat({
+    contextType: 'general',
+  })
+
+  const creditBalance = credits?.balance ?? 0
 
   // Scroll to bottom on new messages
   const scrollToBottom = useCallback(() => {
@@ -181,7 +95,7 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages, isTyping, scrollToBottom])
+  }, [messages, loading, scrollToBottom])
 
   // Auto-resize textarea
   useEffect(() => {
@@ -199,40 +113,19 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
     }
   }, [isOpen])
 
-  const sendMessage = useCallback(
+  const handleSend = useCallback(
     (content: string) => {
-      if (!content.trim() || isTyping) return
-
-      const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content: content.trim(),
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, userMessage])
+      if (!content.trim() || loading) return
+      sendAIMessage(content.trim())
       setInput('')
-      setIsTyping(true)
-
-      const delay = 800 + Math.random() * 1200
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: getMockResponse(content),
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, assistantMessage])
-        setIsTyping(false)
-      }, delay)
     },
-    [isTyping]
+    [loading, sendAIMessage]
   )
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      sendMessage(input)
+      handleSend(input)
     }
   }
 
@@ -240,9 +133,6 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
 
   return (
     <>
-      {/* Pass-through children (layout wrapper mode) */}
-      {children}
-
       {/* Overlay backdrop (mobile) */}
       <AnimatePresence>
         {isOpen && (
@@ -257,9 +147,7 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
         )}
       </AnimatePresence>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Slide-out chat panel                                               */}
-      {/* ------------------------------------------------------------------ */}
+      {/* Slide-out chat panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -287,7 +175,7 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-slate-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
                   <Sparkles className="w-3 h-3 inline -mt-0.5 mr-1 text-amber-400" />
-                  {credits} kredit
+                  {creditBalance} kredit
                 </span>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
@@ -303,7 +191,7 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
             {/* Messages area */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
               <AnimatePresence mode="popLayout">
-                {isEmpty ? (
+                {isEmpty && !loading ? (
                   <motion.div
                     key="empty"
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -320,10 +208,10 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
                     </motion.div>
                     <div>
                       <h3 className="text-base font-semibold text-slate-200 mb-1">
-                        Assalomu alaykum!
+                        Assalomu alaykum, Ustoz!
                       </h3>
                       <p className="text-sm text-slate-400 max-w-[280px]">
-                        Men Murabbiy AI - dars rejalar, baholash va metodika bo'yicha yordamchingiz
+                        Men Murabbiy AI — dars rejalar, baholash va metodika bo'yicha doimiy yordamchingiz
                       </p>
                     </div>
                   </motion.div>
@@ -372,28 +260,38 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
                 )}
               </AnimatePresence>
 
-              <AnimatePresence>{isTyping && <TypingIndicator />}</AnimatePresence>
+              <AnimatePresence>{loading && <TypingIndicator />}</AnimatePresence>
+
+              {/* Error message */}
+              {error && (
+                <div className="text-center text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  {error}
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
             {/* Quick action chips */}
-            <div className="flex-shrink-0 px-4 py-2 border-t border-white/5">
-              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-                {QUICK_ACTIONS.map(({ label, icon: Icon }) => (
-                  <motion.button
-                    key={label}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => sendMessage(label)}
-                    disabled={isTyping}
-                    className="flex-shrink-0 flex items-center gap-1.5 text-xs text-slate-300 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Icon className="w-3 h-3 text-emerald-400" />
-                    {label}
-                  </motion.button>
-                ))}
+            {isEmpty && (
+              <div className="flex-shrink-0 px-4 py-2 border-t border-white/5">
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                  {QUICK_ACTIONS.map(({ label, icon: Icon }) => (
+                    <motion.button
+                      key={label}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => handleSend(label)}
+                      disabled={loading}
+                      className="flex-shrink-0 flex items-center gap-1.5 text-xs text-slate-300 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Icon className="w-3 h-3 text-emerald-400" />
+                      {label}
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Input area */}
             <div className="flex-shrink-0 border-t border-white/10 px-4 py-3 bg-slate-900/60 backdrop-blur-sm">
@@ -410,11 +308,11 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => sendMessage(input)}
-                  disabled={!input.trim() || isTyping}
+                  onClick={() => handleSend(input)}
+                  disabled={!input.trim() || loading}
                   className={cn(
                     'flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200',
-                    input.trim() && !isTyping
+                    input.trim() && !loading
                       ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600'
                       : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed'
                   )}
@@ -430,9 +328,7 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
         )}
       </AnimatePresence>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Floating action button                                             */}
-      {/* ------------------------------------------------------------------ */}
+      {/* Floating action button */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
@@ -442,7 +338,6 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             className="fixed bottom-6 right-6 z-[997]"
           >
-            {/* Pulse ring */}
             <span className="absolute inset-0 rounded-full bg-emerald-500/30 animate-ping" />
 
             <motion.button
@@ -453,10 +348,9 @@ export default function FloatingAssistant({ children, credits = 50 }: FloatingAs
             >
               <Brain className="w-6 h-6" />
 
-              {/* Credits badge */}
-              {credits > 0 && (
+              {creditBalance > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white flex items-center justify-center shadow-lg shadow-amber-500/40 border-2 border-slate-900">
-                  {credits > 99 ? '99+' : credits}
+                  {creditBalance > 99 ? '99+' : creditBalance}
                 </span>
               )}
             </motion.button>
