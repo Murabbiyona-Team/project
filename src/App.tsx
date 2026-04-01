@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
-import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Classes from './pages/Classes';
 import Students from './pages/Students';
@@ -27,15 +26,8 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
 
-      {/* Protected teacher routes */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute allowedRoles={['teacher', 'admin']}>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
+      {/* Dashboard routes (authentication temporarily disabled) */}
+      <Route path="/" element={<DashboardLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="classes" element={<Classes />} />
         <Route path="students" element={<Students />} />
