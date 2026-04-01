@@ -38,21 +38,29 @@ export default function Login() {
     setLoading(true)
     setError('')
 
-    if (mode === 'register') {
-      const { error: err } = await signUpWithEmail(email, password, fullName)
-      if (err) {
-        setError(err.message)
+    try {
+      if (mode === 'register') {
+        const { error: err } = await signUpWithEmail(email, password, fullName)
+        if (err) {
+          setError(err.message === 'Failed to fetch'
+            ? "Serverga ulanib bo'lmadi. Internet aloqangizni tekshiring."
+            : err.message)
+        } else {
+          setMode('login')
+          setError('')
+        }
       } else {
-        setMode('login')
-        setError('')
+        const { error: err } = await signInWithEmail(email, password)
+        if (err) {
+          setError(err.message === 'Failed to fetch'
+            ? "Serverga ulanib bo'lmadi. Internet aloqangizni tekshiring."
+            : err.message)
+        } else {
+          navigate('/')
+        }
       }
-    } else {
-      const { error: err } = await signInWithEmail(email, password)
-      if (err) {
-        setError(err.message)
-      } else {
-        navigate('/')
-      }
+    } catch {
+      setError("Kutilmagan xatolik yuz berdi. Qaytadan urinib ko'ring.")
     }
     setLoading(false)
   }
