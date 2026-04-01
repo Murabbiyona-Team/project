@@ -30,39 +30,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 
-  // Create or retrieve a conversation record
-  const ensureConversation = useCallback(async (): Promise<string | null> => {
-    if (conversationId) return conversationId
-
-    if (!user) {
-      setError('Foydalanuvchi tizimga kirmagan')
-      return null
-    }
-
-    try {
-      const { data, error: err } = await supabase
-        .from('ai_conversations')
-        .insert({
-          teacher_id: user.id,
-          context_type: contextType,
-          messages: [],
-        })
-        .select()
-        .single()
-
-      if (err) {
-        setError(err.message)
-        return null
-      }
-
-      setConversationId(data.id)
-      return data.id
-    } catch (e: any) {
-      setError(e.message || 'Suhbat yaratishda xatolik')
-      return null
-    }
-  }, [conversationId, user, contextType])
-
   // Save a single message to the ai_messages table
   const saveMessage = useCallback(
     async (convId: string, message: ChatMessage) => {
@@ -79,7 +46,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
     []
   )
 
-  // Send a message to the Gemini edge function
+  // Send a message to the ChatGPT edge function
   const sendMessage = useCallback(
     async (content: string) => {
       if (!content.trim()) return
@@ -101,19 +68,31 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       setMessages((prev) => [...prev, userMessage])
 
       try {
-        // Ensure we have a conversation
-        const convId = await ensureConversation()
+        // Create conversation if needed (non-blocking — skip if fails)
+        let convId = conversationId
         if (!convId) {
-          setLoading(false)
-          return
+          try {
+            const { data } = await supabase
+              .from('ai_conversations')
+              .insert({
+                teacher_id: user.id,
+                context_type: contextType,
+                messages: [],
+              })
+              .select('id')
+              .single()
+            if (data) {
+              convId = data.id
+              setConversationId(data.id)
+            }
+          } catch {
+            // Continue without conversation — chat still works
+          }
         }
-
-        // Save user message to DB
-        await saveMessage(convId, userMessage)
 
         // Build message history for context
         const history = messages.map((m) => ({
-          role: m.role,
+          role: m.role === 'assistant' ? 'assistant' : 'user',
           content: m.content,
         }))
         history.push({ role: 'user', content: content.trim() })
@@ -158,7 +137,12 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         }
 
         setMessages((prev) => [...prev, assistantMessage])
-        await saveMessage(convId, assistantMessage)
+
+        // Save messages to DB (non-blocking)
+        if (convId) {
+          saveMessage(convId, userMessage)
+          saveMessage(convId, assistantMessage)
+        }
 
         // Refresh credits after usage
         refreshCredits()
@@ -173,10 +157,10 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       user,
       session,
       messages,
+      conversationId,
       contextType,
       systemPrompt,
       supabaseUrl,
-      ensureConversation,
       saveMessage,
       refreshCredits,
     ]
