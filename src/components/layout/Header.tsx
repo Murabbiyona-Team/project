@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Bell, X, Circle, Globe } from 'lucide-react';
+import { Search, Bell, X, Circle, Globe, Sun } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -48,8 +48,15 @@ export default function Header() {
           {/* Right Icons - 1x1 size match */}
           <div className="flex items-center justify-end gap-4 shrink-0">
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setShowSearch(true)} 
+              <button
+                className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors cursor-pointer"
+                title="Light mode"
+              >
+                <Sun className="size-5 text-muted-foreground" strokeWidth={2} />
+              </button>
+
+              <button
+                onClick={() => setShowSearch(true)}
                 className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors cursor-pointer"
               >
                 <Search className="size-5 text-muted-foreground" strokeWidth={2} />
