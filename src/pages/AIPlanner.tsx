@@ -152,9 +152,9 @@ export default function AIPlanner() {
   const [configCollapsed, setConfigCollapsed] = useState(false);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4">
+    <div className="h-full flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4 overflow-hidden">
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-6 shrink-0">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20">
             <Brain className="size-6 text-emerald-500" />
@@ -186,7 +186,7 @@ export default function AIPlanner() {
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 min-h-0 flex gap-5">
+      <div className="flex-1 min-h-0 flex gap-5 overflow-hidden">
         {/* ─── LEFT SIDE: Configuration Panel ─── */}
         <AnimatePresence initial={false}>
           {!configCollapsed && (
@@ -195,30 +195,30 @@ export default function AIPlanner() {
               animate={{ width: 340, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="shrink-0 overflow-hidden"
+              className="shrink-0 h-full overflow-hidden"
             >
-              <div className="w-[340px] h-full flex flex-col gap-4 overflow-y-auto pr-2 pb-2">
+              <div className="w-[340px] h-full flex flex-col gap-3 overflow-y-auto pr-2 pb-4 scrollbar-hide">
           {/* Planning Model Selector */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
               Rejalashtirish modeli
             </label>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               {PLANNING_MODELS.map((model) => (
                 <motion.button
                   key={model.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedModel(model.id)}
-                  className={`relative p-3.5 rounded-xl text-left transition-all duration-200 cursor-pointer border ${
+                  className={`relative p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border ${
                     selectedModel === model.id
                       ? `${model.bg} ${model.border} ring-2 ${model.ring}`
                       : 'bg-card border-border hover:bg-muted/50'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
+                  <div className="flex items-center gap-2 mb-1">
                     <div
-                      className={`p-1.5 rounded-lg ${
+                      className={`p-1 rounded-lg ${
                         selectedModel === model.id ? model.bg : 'bg-muted'
                       }`}
                     >
@@ -227,14 +227,14 @@ export default function AIPlanner() {
                       </span>
                     </div>
                     <span
-                      className={`text-sm font-bold ${
+                      className={`text-xs font-bold ${
                         selectedModel === model.id ? model.color : 'text-foreground'
                       }`}
                     >
                       {model.title}
                     </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
+                  <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">
                     {model.subtitle}
                   </p>
                   {selectedModel === model.id && (
@@ -326,49 +326,45 @@ export default function AIPlanner() {
 
           {/* Bloom's Taxonomy */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 block">
-              Blum taksonomiyasi darajasi
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              Blum taksonomiyasi
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {BLOOM_LEVELS.map((level) => (
-                <motion.button
+                <button
                   key={level.label}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => toggleBloom(level.label)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
                     selectedBlooms.includes(level.label)
                       ? level.color
-                      : 'bg-muted/40 text-muted-foreground border-transparent'
+                      : 'bg-muted/40 text-muted-foreground border-transparent hover:bg-muted'
                   }`}
                 >
                   {level.displayName}
-                </motion.button>
+                </button>
               ))}
             </div>
           </div>
 
           {/* Duration Selector */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
               <Clock className="size-3.5 inline mr-1.5 -mt-0.5" />
               Dars davomiyligi
             </label>
             <div className="flex gap-2">
               {DURATIONS.map((d) => (
-                <motion.button
+                <button
                   key={d}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => setDuration(d)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
                     duration === d
                       ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30 ring-2 ring-emerald-500/20'
                       : 'bg-card border-border text-muted-foreground hover:bg-muted/50'
                   }`}
                 >
                   {d} daq
-                </motion.button>
+                </button>
               ))}
             </div>
           </div>
@@ -380,41 +376,43 @@ export default function AIPlanner() {
             </div>
           )}
 
-          {/* Generate Button */}
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleGenerate}
-            disabled={planLoading}
-            className="relative w-full py-3.5 rounded-xl font-bold text-white text-[15px] bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              {planLoading ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <Sparkles className="size-5" />
-                  </motion.div>
-                  Yaratilmoqda...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="size-5" />
-                  Dars reja yaratish
-                </>
+          {/* Generate Button — sticky at the bottom */}
+          <div className="sticky bottom-0 pt-2 pb-1 bg-background/80 backdrop-blur-sm">
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleGenerate}
+              disabled={planLoading}
+              className="relative w-full py-3 rounded-xl font-bold text-white text-sm bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {planLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Sparkles className="size-4" />
+                    </motion.div>
+                    Yaratilmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-4" />
+                    Dars reja yaratish
+                  </>
+                )}
+              </span>
+              {/* Shimmer effect */}
+              {!planLoading && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
+                />
               )}
-            </span>
-            {/* Shimmer effect */}
-            {!planLoading && (
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{ x: ['-100%', '100%'] }}
-                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
-              />
-            )}
-          </motion.button>
+            </motion.button>
+          </div>
               </div>
             </motion.div>
           )}
