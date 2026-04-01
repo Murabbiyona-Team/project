@@ -14,6 +14,9 @@ import {
   Wand2,
   HardDrive,
   Brain,
+  Zap,
+  TrendingUp,
+  FileText,
   ChevronDown,
   Check,
   Plus,
@@ -55,6 +58,7 @@ export default function Sidebar() {
       items: [
         { name: t('sidebar.grades'), href: '/grading', icon: BarChart2 },
         { name: t('sidebar.attendance'), href: '/attendance', icon: ClipboardCheck },
+        { name: 'Jonli Baholash', href: '/live-assessment', icon: Zap },
         { name: t('sidebar.standards'), href: '/standards', icon: Target },
       ]
     },
@@ -63,6 +67,13 @@ export default function Sidebar() {
       items: [
         { name: t('sidebar.tasks'), href: '/tasks', icon: CheckSquare },
         { name: t('sidebar.rewards', "Rag'batlar"), href: '/rewards', icon: Star },
+      ]
+    },
+    {
+      title: 'Analitika',
+      items: [
+        { name: 'Tahlillar', href: '/analytics', icon: TrendingUp },
+        { name: 'Hisobotlar', href: '/reports', icon: FileText },
       ]
     },
     {
