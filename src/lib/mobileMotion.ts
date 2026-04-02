@@ -5,7 +5,7 @@ export const pageTransition = {
     y: 0,
     transition: {
       duration: 0.35,
-      ease: [0.22, 1, 0.36, 1],
+      ease: 'easeOut' as const,
     },
   },
   exit: {
@@ -13,7 +13,7 @@ export const pageTransition = {
     y: -12,
     transition: {
       duration: 0.2,
-      ease: [0.4, 0, 1, 1],
+      ease: 'easeIn' as const,
     },
   },
 };
@@ -36,7 +36,7 @@ export const fadeUpItem = {
     y: 0,
     transition: {
       duration: 0.32,
-      ease: [0.22, 1, 0.36, 1],
+      ease: 'easeOut' as const,
     },
   },
 };
@@ -48,7 +48,7 @@ export const scaleInItem = {
     scale: 1,
     transition: {
       duration: 0.26,
-      ease: [0.22, 1, 0.36, 1],
+      ease: 'easeOut' as const,
     },
   },
 };
